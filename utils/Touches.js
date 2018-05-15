@@ -10,7 +10,7 @@ class Touches {
      * @param {number} operationWrapperWidth 左滑出现的操作块宽度
      */
     initData({ datalist, operationWrapperWidth }) {
-        this.operationWrapperWidth = operationWrapperWidth
+        this.operationWrapperWidth = Math.abs(operationWrapperWidth)
         this.dataList = datalist instanceof Array
             ? datalist.concat()
             : [datalist]
@@ -36,8 +36,8 @@ class Touches {
         let moveWidth = this._getMoveWidth(e)
         if (moveWidth > 0) return
     
-        this.dataList[this.getItemIndex(e)].left = Math.abs(moveWidth) > 150
-            ? -150
+        this.dataList[this.getItemIndex(e)].left = Math.abs(moveWidth) > this.operationWrapperWidth
+            ? -this.operationWrapperWidth
             : moveWidth
     
         return this.dataList[this.getItemIndex(e)]
