@@ -8,25 +8,30 @@ Page({
     itemData,
   },
   touchS: function (e) {  // touchstart
-    let startX = App.Touches.getClientX(e)
-    startX && this.setData({ startX })
+    this.setData({ itemData: App.Touches.touchStart(e) })
   },
   touchM: function (e) {  // touchmove
-    let itemData = App.Touches.touchM(e, this.data.itemData, this.data.startX)
-    itemData && this.setData({ itemData })
-
+    let item = App.Touches.touchMove(e)
+    item && this.setData({ [`itemData[${App.Touches.getItemIndex(e)}]`]: item })
   },
   touchE: function (e) {  // touchend
-    const width = 150  // 定义操作列表宽度
-    let itemData = App.Touches.touchE(e, this.data.itemData, this.data.startX, width)
-    itemData && this.setData({ itemData })
+    let item = App.Touches.touchEnd(e)
+    item && this.setData({ [`itemData[${App.Touches.getItemIndex(e)}]`]: item })
   },
   itemDelete: function(e){  // itemDelete
-    let itemData = App.Touches.deleteItem(e, this.data.itemData)
-    itemData && this.setData({ itemData })
+    this.data.itemData.splice(App.Touches.getItemIndex(e), 1)
+    this.initTouchData()
+    this.setData({ itemData: this.data.itemData })
+  },
+  initTouchData() {
+    App.Touches.initData({
+      datalist: this.data.itemData,
+      operationWrapperWidth: 150
+    })
   },
   onLoad: function (options) {
     // 页面初始化 options为页面跳转所带来的参数
+    this.initTouchData()
   },
   onReady: function () {
     // 页面渲染完成

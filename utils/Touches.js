@@ -1,64 +1,86 @@
 
 class Touches {
-    constructor() {
-
+    dataList = []
+    startClientX = null
+    operationWrapperWidth = null
+  
+    /**
+     * 初始化相关数据
+     * @param {array} dataList 列表数据
+     * @param {number} operationWrapperWidth 左滑出现的操作块宽度
+     */
+    initData({ datalist, operationWrapperWidth }) {
+        this.operationWrapperWidth = operationWrapperWidth
+        this.dataList = datalist instanceof Array
+            ? datalist.concat()
+            : [datalist]
     }
-
-    _getIndex(e) {  // 获取滑动列表的下标值
+  
+    /**
+     * 手指触摸动作开始
+     * 1. 重置数据
+     * 2. 获取触摸起始位置x
+     * @return {array} 被初始化的列表数据
+     */
+    touchStart(e) {
+        this._resetData()
+        this.startClientX = this._getClientX(e)
+        return this.dataList
+    }
+  
+    /**
+     * 手指触摸后移动
+     * @return {object} 当前被操作的item
+     */
+    touchMove(e) {
+        let moveWidth = this._getMoveWidth(e)
+        if (moveWidth > 0) return
+    
+        this.dataList[this.getItemIndex(e)].left = Math.abs(moveWidth) > 150
+            ? -150
+            : moveWidth
+    
+        return this.dataList[this.getItemIndex(e)]
+    }
+  
+    /**
+     * 手指触摸动作结束
+     * @return {object} 当前被操作的item
+     */
+    touchEnd(e) {
+        let moveWidth = this._getMoveWidth(e)
+        let left = 0
+    
+        // 向左滑动 且 滑动的距离已大于操作块宽度的一半
+        if (moveWidth < 0 && Math.abs(moveWidth) > this.operationWrapperWidth / 2) {
+            left = -this.operationWrapperWidth
+        }
+    
+        this.dataList[this.getItemIndex(e)].left = left
+        return this.dataList[this.getItemIndex(e)]
+    }
+  
+    // 获取滑动列表的下标值
+    getItemIndex(e) {
         return e.currentTarget.dataset.index
     }
-
-    _getMoveX(e, startX) {  // 获取滑动过程中滑动的距离
-        return this.getClientX(e) - startX
-    }
-
-    _getEndX(e, startX) {  // 获取滑动结束滑动的距离
+  
+    // 获取当前滑动手势下 距离页面可显示区域的 横坐标
+    _getClientX(e) {
         let touch = e.changedTouches
-        if (touch.length === 1) {
-            return touch[0].clientX - startX
-        }
+        if (touch.length === 1) return touch[0].clientX
     }
-
-    _resetData(dataList) {  // 重置数据， 把所有的列表 left 置为 0
-        for (let i in dataList) {
-            dataList[i].left = 0
-        }
-        return dataList
+  
+    // 获取滑动过程中 滑动的宽度
+    _getMoveWidth(e) {
+        return this._getClientX(e) - this.startClientX
     }
-
-    getClientX(e) {  // 获取滑动的横坐标
-        let touch = e.touches
-        if (touch.length === 1) {
-            return touch[0].clientX
-        }
+  
+    _resetData() {
+        this.startClientX = null
+        this.dataList.forEach(v => { v.left = 0 })
     }
-
-    touchM(e, dataList, startX) {  // touchmove 过程中更新列表数据
-        let list = this._resetData(dataList)
-        list[this._getIndex(e)].left = this._getMoveX(e, startX)
-        return list
-    }
-
-    touchE(e, dataList, startX, width) {  // touchend 更新列表数据
-        let list = this._resetData(dataList)
-        let disX = this._getEndX(e, startX)
-        let left = 0
-
-        if (disX < 0) {  // 判断滑动方向， （向左滑动）
-            // 滑动的距离大于删除宽度的一半就显示操作列表 否则不显示
-            Math.abs(disX) > width / 2 ? left = -width : left = 0
-        } else {  // 向右滑动复位
-            left = 0
-        }
-
-        list[this._getIndex(e)].left = left
-        return list
-    }
-
-    deleteItem(e, dataList) {  // 删除功能
-        dataList.splice(this._getIndex(e), 1)
-        return dataList
-    }
-}
-
-export default Touches
+  }
+  
+  export default Touches
+  
